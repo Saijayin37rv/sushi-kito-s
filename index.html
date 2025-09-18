@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Menú | SUSHI KITO´S</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/jpg" href="media/logo/logo.jpg">
+
+  <!-- Overrides mínimos para carruseles y scroll -->
+    <style>
+    /* Estilo mejorado para el input de salsa aparte */
+    #salsa-aparte-input {
+      border: 1.5px solid #ff2d2d;
+      border-radius: 7px;
+      padding: 6px 10px;
+      background: #232323;
+      color: #fff;
+      margin-left: 8px;
+      transition: border 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    #salsa-aparte-input:focus {
+      border: 1.5px solid #ff6a3d;
+      box-shadow: 0 0 0 2px #ff2d2d33;
+      background: #181818;
+    }
+    /* Scroll global seguro */
+    html, body { height: auto; overflow-y: auto; overflow-x: hidden; }
+    .container, main, .grid { overflow: visible; }
+
+    /* Productos por sección como carrusel horizontal */
+    .products { display: block; } /* anula el grid interno de productos */
+    .section { margin: 12px 0 28px; }
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      margin: 8px 0 10px;
+    }
+    .section-header h2 { margin: 0; }
+    .section-controls { display: inline-flex; gap: 8px; }
+    .scroll-btn {
+      width: 36px; height: 36px; border-radius: 999px;
+      border: 1px solid #3a3a3a; background: #111; color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 6px 18px #0008; font-weight: 700;
+    }
+    .scroll-btn:active { transform: scale(0.98); }
+
+    /* Carrusel con scroll-snap */
+    .scroller {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: clamp(220px, 28vw, 320px);
+      gap: 16px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 8px;
+    }
+    .scroller::-webkit-scrollbar { height: 8px; }
+    .card { scroll-snap-align: start; }
+    .section-title { scroll-margin-top: 90px; }
+
+    /* La sidebar no bloquea el scroll en pantallas chicas */
+    @media (max-width: 899px) {
+      .sidebar { position: static; height: auto; }
+    }
+
+    .card img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      object-fit: cover;
+      max-height: 180px;
+    }
+
+    /* Centrar precios en las tarjetas de productos */
+    .card .row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .card .price {
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #ff2d2d;
+      text-align: center;
+      margin-left: 4px;
+    }
+    .card .muted {
+      text-align: center;
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .card .row {
+        flex-direction: column;
+        gap: 2px;
+      }
+      .card .price {
+        font-size: 1.2em;
+      }
+    }
+
+    input, textarea, button {
+      font-size: 1em;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 8px;
+    }
+    .btn {
+      min-height: 44px;
+      font-size: 1.1em;
+    }
+
+    /* Modal personalizado */
+    .modal {
+      max-width: 98vw;
+      width: 400px;
+      margin: 8vw auto;
+      padding: 18px 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="splash-screen" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#1a1a1a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <img src="media/logo/logo.jpg" alt="Logo" style="width:160px;height:160px;border-radius:50%;box-shadow:0 4px 24px #ff2d2d55;">
+    <h1 style="color:#ffffff;margin-top:24px;font-size:2.2em;letter-spacing:2px;">SUSHI KITO´S</h1>
+  </div>
+  <header>
+    <div class="container title">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 7h18M7 3v8a5 5 0 0 0 10 0V3" stroke="#ff2d2d" stroke-width="1.6"/><path d="M6 21h12" stroke="#cfcfcf" stroke-width="1.4"/></svg>
+      <h1>Menú &nbsp;·&nbsp; SUSHI KITO´S</h1>
+    </div>
+  </header>
+
+  <main class="container" id="main-content" style="display:none;">
+    <div class="grid">
+      <!-- Productos (cada sección con carrusel) -->
+      <section class="products" id="products"></section>
+
+      <!-- Carrito (SIN envío) -->
+      <!-- Carrito de compras -->
+<aside class="sidebar">
+  <div class="panel">
+    <div class="row" style="margin-bottom:8px;">
+      <strong>Tu pedido</strong>
+      <span id="cart-count" class="muted"></span>
+    </div>
+    <div class="cart-items" id="cart-items"></div>
+    <div class="line"></div>
+    <div class="row"><span>Subtotal</span><strong id="subtotal">$0.00</strong></div>
+    <div class="row">
+  <span>Envío</span>
+  <strong id="shipping" class="muted">Se lo da la persona del número de whatsapp según zona</strong>
+</div>
+    <div class="row"><span>Total</span><strong id="total">$0.00</strong></div>
+    <div class="line"></div>
+    <div style="margin-bottom:8px;"><strong>Datos del cliente</strong></div>
+    <input id="customer-name" type="text" placeholder="Nombre" autocomplete="name" />
+    <input id="customer-phone" type="tel" placeholder="Teléfono del cliente (opcional)" autocomplete="tel" />
+    <textarea id="customer-address" placeholder="Dirección o indicaciones"></textarea>
+    <div class="group" style="margin-bottom:8px;">
+      <label for="payment-type" class="muted" style="margin-bottom:4px;display:block;">Tipo de pago</label>
+      <select id="payment-type">
+        <option value="Efectivo">Efectivo</option>
+        <option value="Transferencia">Transferencia</option>
+      </select>
+    </div>
+    <textarea id="order-notes" placeholder="Notas del pedido (ej. salsas, horario)"></textarea>
+    <button id="send-whatsapp" class="btn btn-primary">Enviar pedido por WhatsApp</button>
+    <button id="clear-cart" class="btn btn-danger">Vaciar carrito</button>
+  </div>
+</aside>
+    </div>
+  </main>
+
+  <!-- Modal para opciones -->
+  <div id="modal-backdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h3 id="modal-title">Opciones</h3>
+      <div id="modal-content"></div>
+      <div class="actions">
+        <button id="modal-cancel" class="btn">Cancelar</button>
+        <button id="modal-ok" class="btn btn-primary">Añadir</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Hecho con ♥ — 8110729156 <code>SUSHI KITO´S</code>.<br>
+    <a href="privacidad.html" target="_blank" style="color:#0a4a7a; text-decoration:underline; font-size:0.98em;">Aviso de Privacidad para Clientes, Proveedores y Usuarios</a>
+  </footer>
+
+  <div id="cart-toast"></div>
+  <div id="cart-fab" onclick="scrollToCart()" style="display:none;">
+    🛒<span id="cart-fab-count">0</span>
+  </div>
+
+  <script>
+// Splash screen logic
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    document.getElementById('splash-screen').style.display = 'none';
+    document.getElementById('main-content').style.display = '';
+  }, 5000);
+});
+    // ==============================
+    // CONFIGURACIÓN
+    // ==============================
+    const WHATSAPP_NUMBER = '5218110729156'; // sin '+'
+
+    const SAUCES = [
+      'BBQ', 'Hot BBQ', 'Mango Habanero', 'Salsa Picante', 'Buffalo', 'Extra Picante', 'Lemon Pepper'
+    ];
+
+    const SUSHI_FRESH = [
+      { name: 'Philadelphia roll', desc: 'Salmón rosado, queso philadelphia, pepino fresco' },
+      { name: 'Ginger Roll', desc: 'Salmón rosado, surimi, queso philadelphia, aguacate, cubierta de aguacate y jengibre encurtido' },
+      { name: 'California Roll', desc: 'Surimi, aguacate, queso philadelphia, pepino fresco' },
+      { name: 'Camaron Roll', desc: 'Camarón, aguacate, queso philadelphia' },
+      { name: 'Sushi de vegetales', desc: 'Aguacate, zanahoria, mix lechugas, pepino fresco' },
+      { name: 'Uramaki de atún', desc: 'Atún fresco, aguacate, queso philadelphia' }
+    ];
+
+    const SUSHI_FRIED = [
+      { name: 'California Roll', desc: 'Surimi, aguacate, queso philadelphia, pepino fresco' },
+      { name: 'Camaron Roll', desc: 'Camarón, aguacate, queso philadelphia' },
+      { name: 'Uramaki de atún', desc: 'Atún fresco, aguacate, queso philadelphia' },
+      { name: 'Queso Roll', desc: 'Queso manchego, queso panela, queso philadelphia' }
+    ];
+
+    // ==============================
+    // CATÁLOGO (por secciones)
+    // ==============================
+    const CATALOG = [
+      {
+        section: 'MARISCOS',
+        items: [
+          { id: 'mariscos-camarones-empanizados', name: 'Platillo Camarones Empanizados', price: 150, image: 'media/comidas/camarones_empanizados.jpg', desc: 'Camarones empanizados, arroz, papas a la francesa, ensalada de verduras.' },
+          { id: 'mariscos-filete-empanizado', name: 'Platillo de Filete Empanizado', price: 150, image: 'media/comidas/filete_empanizado.jpg', desc: 'Filete empanizado, arroz, papas a la francesa, ensalada de verduras.' },
+          { id: 'mariscos-mixto-empanizado', name: 'Platillo Mixto Empanizado', price: 160, image: 'media/comidas/mixto_empanizado.jpg', desc: 'Filete y camarones empanizados, arroz, papas a la francesa, ensalada de verduras.' },
+          { id: 'mariscos-aguachile-chico', name: 'Aguachile Chico', price: 120, image: 'media/comidas/aguachile.jpg' },
+          { id: 'mariscos-aguachile-grande', name: 'Aguachile Grande', price: 190, image: 'media/comidas/aguachile.jpg' },
+          { id: 'mariscos-coctel-camarones-1-2', name: 'Coctel de Camarones 1/2 litro', price: 95, image: 'media/comidas/coctel_camaron.jpg' },
+          { id: 'mariscos-coctel-camarones-1', name: 'Coctel de Camarones 1 litro', price: 180, image: 'media/comidas/coctel_camaron.jpg' },
+          { id: 'mariscos-ceviche-camaron-1-2', name: 'Ceviche de Camarón 1/2 litro', price: 120, image: 'media/comidas/ceviche_camaron.jpg' },
+          { id: 'mariscos-ceviche-camaron-1', name: 'Ceviche de Camarón 1 litro', price: 220, image: 'media/comidas/ceviche_camaron.jpg' },
+          { id: 'mariscos-ceviche-1-2', name: 'Ceviche 1/2 litro', price: 95, image: 'media/comidas/ceviche.jpg' },
+          { id: 'mariscos-ceviche-1', name: 'Ceviche 1 litro', price: 180, image: 'media/comidas/ceviche.jpg' }
+        ]
+      },
+      {
+        section: 'BONELESS',
+        items: [
+          { id: 'boneless-250', name: 'Boneless 250 g', price: 135, image: 'media/comidas/boneless.jpg', options: { sauce: true }, desc: 'Porción de boneless, papas a la francesa, varitas de zanahoria y apio, aderezos.' },
+          { id: 'boneless-500', name: 'Boneless 500 g', price: 170, image: 'media/comidas/boneless.jpg', options: { sauce: true }, desc: 'Porción de boneless, papas a la francesa, varitas de zanahoria y apio, aderezos.' },
+          { id: 'boneless-1000', name: 'Boneless 1 kg', price: 260, image: 'media/comidas/boneless.jpg', options: { sauce: true }, desc: 'Porción de boneless, papas a la francesa, varitas de zanahoria y apio, aderezos.' }
+        ]
+      },
+      {
+        section: 'ALITAS',
+        items: [
+          { id: 'alitas-250', name: 'Alitas 250 g', price: 135, image: 'media/comidas/alitas.jpg', options: { sauce: true }, desc: 'Porción de alitas, papas a la francesa, varitas de zanahoria y apio, aderezos.' },
+          { id: 'alitas-500', name: 'Alitas 500 g', price: 170, image: 'media/comidas/alitas.jpg', options: { sauce: true }, desc: 'Porción de alitas, papas a la francesa, varitas de zanahoria y apio, aderezos.' },
+          { id: 'alitas-1000', name: 'Alitas 1 kg', price: 260, image: 'media/comidas/alitas.jpg', options: { sauce: true }, desc: 'Porción de alitas, papas a la francesa, varitas de zanahoria y apio, aderezos.' }
+        ]
+      },
+      {
+        section: 'HOT DOGS JUMBO',
+        items: [
+          { id: 'hotdog-jumbo-1', name: 'Hot Dog Jumbo (1 pza)', price: 70, image: 'media/comidas/hotdog1.jpg', desc: 'Incluye porción de papas a la francesa.' },
+          { id: 'hotdog-jumbo-2', name: 'Hot Dog Jumbo (2 pzas)', price: 120, image: 'media/comidas/hotdog.jpg', desc: 'Incluye porción de papas a la francesa.' }
+        ]
+      },
+      {
+        section: 'HAMBURGUESAS',
+        items: [
+          { id: 'hamburguesa-res', name: 'Hamburguesa de Res', price: 60, image: 'media/comidas/hamburguesa_res_tocino.jpg', desc: 'Carne de res a la plancha, jamón, queso asadero, queso americano, pan fresco, tomate, cebolla, aguacate, lechuga.', options: { friesDelta: 25 } },
+          { id: 'hamburguesa-res-doble', name: 'Hamburguesa Doble de Res', price: 90, image: 'media/comidas/doble_res.jpg', desc: 'Doble carne de res, doble jamón, doble queso asadero y americano, pan fresco, tomate, cebolla, aguacate, lechuga.', options: { friesDelta: 25 } },
+          { id: 'hamburguesa-res-tocino', name: 'Hamburguesa de Res con Tocino', price: 80, image: 'media/comidas/hamburguesa_res_tocino.jpg', desc: 'Carne de res con tocino, jamón, queso asadero, queso americano, verduras frescas.', options: { friesDelta: 25 } },
+          { id: 'hamburguesa-pollo', name: 'Hamburguesa de Pollo', price: 90, image: 'media/comidas/hamburguesa_pollo.jpg', desc: 'Pechuga frita empanizada, queso americano, tomate, cebolla morada, lechuga, aderezo ranch.', options: { friesDelta: 25, sauce: ['BBQ', 'Mango Habanero', 'Salsa Picante', 'Sin Salsa'] } },
+          { id: 'hamburguesa-pollo-tocino', name: 'Hamburguesa de Pollo con Tocino', price: 110, image: 'media/comidas/pollo_tocino.jpg', desc: 'Pechuga frita empanizada con tocino, queso americano, verduras y ranch.', options: { friesDelta: 25, sauce: ['BBQ', 'Mango Habanero', 'Salsa Picante', 'Sin Salsa'] } }
+        ]
+      },
+      {
+        section: 'SUSHI',
+        items: [
+          { id: 'sushi-individual', name: 'Sushi Individual', price: 95, image: 'media/comidas/sushi_individual.jpg', desc: '1 rollo a elegir (fresco o frito).', options: { sushi: { type: 'individual' } } },
+          { id: 'sushi-combo-1', name: 'Sushi Combo 1', price: 200, image: 'media/comidas/sushi_combo1.jpg', desc: '1 rollo frito y 2 frescos, arroz frito, papas a la francesa.', options: { sushi: { type: 'combo1' } } },
+          { id: 'sushi-combo-2', name: 'Sushi Combo 2', price: 180, image: 'media/comidas/sushi_combo2.jpg', desc: '2 rollos a elegir (frescos o fritos), arroz frito, papas a la francesa.', options: { sushi: { type: 'combo2' } } },
+          { id: 'sushi-combo-3', name: 'Sushi Combo 3', price: 125, image: 'media/comidas/sushi_combo3.jpg', desc: '1 rollo a elegir (fresco o frito), arroz frito, papas a la francesa.', options: { sushi: { type: 'combo3' } } }
+        ]
+      },
+      {
+        section: 'POLLO FRITO',
+        items: [
+          { id: 'pollo-pieza', name: 'Pieza individual', price: 18, image: 'media/comidas/pollofrito2.jpg' },
+          { id: 'pollo-paquete-1', name: 'Paquete 1', price: 45, image: 'media/comidas/pollo_frito.jpg', desc: '2 piezas y porción de spaghetti o puré.', options: {} },
+          { id: 'pollo-paquete-2', name: 'Paquete 2', price: 65, image: 'media/comidas/pollo_frito.jpg', desc: '3 piezas y porción de spaghetti o puré.', options: {} },
+          { id: 'pollo-paquete-3', name: 'Paquete 3', price: 130, image: 'media/comidas/pollo_frito.jpg', desc: '6 piezas y porción de 1/2 de spaghetti o puré.', options: {} },
+          { id: 'pollo-paquete-4', name: 'Paquete 4', price: 170, image: 'media/comidas/pollo_frito.jpg', desc: '8 piezas y porción de 1/2 de spaghetti o puré.', options: {} },
+          { id: 'pollo-paquete-5', name: 'Paquete 5', price: 200, image: 'media/comidas/pollo_frito.jpg', desc: '10 piezas y porción de 1/2 de spaghetti o puré.', options: {} },
+          { id: 'pollo-paquete-6', name: 'Paquete 6', price: 230, image: 'media/comidas/pollo_frito.jpg', desc: '12 piezas y porción de 1/2 de spaghetti o puré.', options: {} }
+        ]
+      },
+        {
+          section: 'BEBIDAS',
+          items: [
+            { id: 'bebida-coca-600', name: 'Coca cola 600 ml', price: 25, image: 'media/bebidas/coca600.jpg' },
+            { id: 'bebida-fuze-negro-600', name: 'Fuze tea Negro 600 ml', price: 25, image: 'media/bebidas/fuzelimon.jpg' },
+            { id: 'bebida-fuze-durazno-600', name: 'Fuze tea Durazno 600 ml', price: 25, image: 'media/bebidas/fuzedurazno.jpg' },
+            { id: 'bebida-agua-ciel-1l', name: 'Agua Ciel 1 litro', price: 20, image: 'media/bebidas/agua1lt.jpg' },
+            { id: 'bebida-coca-2-5l', name: 'Coca cola 2.5 lt', price: 60, image: 'media/bebidas/coca2medio.jpg' },
+            { id: 'bebida-joyas-manzana-600', name: 'Joyas Manzana 600 ml', price: 25, image: 'media/bebidas/joyamanzana.jpg' },
+            { id: 'bebida-joyas-durazno-600', name: 'Joyas Durazno 600 ml', price: 25, image: 'media/bebidas/joyadurazno.png' },
+            { id: 'bebida-joyas-ponche-600', name: 'Joyas Ponche 600 ml', price: 25, image: 'media/bebidas/joyaponche.jpg' }
+          ]
+        },
+          {
+            section: 'EXTRAS',
+            items: [
+              { id: 'extra-arroz-blanco', name: '1/2 arroz blanco', price: 45, image: 'media/comidas/arroz_extra.jpg' },
+              { id: 'extra-spaghetti', name: '1/2 spaghetti', price: 45, image: 'media/comidas/extra_spaguetti.jpg' },
+              { id: 'extra-pure-papa', name: '1/2 puré de papa', price: 45, image: 'media/comidas/extra_pure.jpg' },
+              { id: 'extra-papas-francesa', name: 'Orden de papas a la francesa', price: 45, image: 'media/comidas/extra_papas.jpg' }
+            ]
+          },
+    ];
+
+    const MXN = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+    // Estado del carrito
+    const cart = JSON.parse(localStorage.getItem('cart') || '{}'); // { [id|meta]: {id,name,price,image,qty,meta?} }
+    const PRODUCT_MAP = {}; for (const s of CATALOG) for (const p of s.items) PRODUCT_MAP[p.id] = p;
+
+    // Util
+    const sid = s => 'sec-' + s.toLowerCase().normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+
+    // Render de productos (secciones con carrusel)
+    const productsEl = document.getElementById('products');
+    function renderProducts() {
+      const parts = [];
+      for (const section of CATALOG) {
+        const id = sid(section.section);
+        parts.push(`
+          <div class="section" id="${id}">
+            <div class="section-header" onclick="toggleSection('${id}')" style="cursor:pointer;user-select:none;">
+              <h2 class="section-title">${section.section}</h2>
+              <span id="arrow-${id}" style="font-size:1.3em;transition:transform 0.2s;">▼</span>
+            </div>
+            <div class="scroller" id="scr-${id}" style="display:none;">
+              ${section.items.map(p => {
+                const key = p.id;
+                const qty = cart[key]?.qty || 0;
+                return `
+                <article class="card">
+                  <img src="${p.image}" alt="${p.name}" loading="lazy" />
+                  <div class="body">
+                    <h3>${p.name}</h3>
+                    ${p.desc ? `<div class=\"muted\">${p.desc}</div>` : ''}
+                    <div class="row">
+                      <span class="muted">Precio</span>
+                      <span class="price">${MXN.format(p.price)}</span>
+                    </div>
+                    <button class="btn${qty > 0 ? ' btn-primary' : ''}" onclick="startAddFlow('${p.id}')" style="position:relative;">
+                      Añadir al carrito
+                      ${qty > 0 ? `<span class=\"badge\">${qty}</span>` : ''}
+                    </button>
+                  </div>
+                </article>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `);
+      }
+      productsEl.innerHTML = parts.join('');
+    }
+
+    // Función global para expandir/colapsar secciones
+    window.toggleSection = function(id) {
+      const scroller = document.getElementById('scr-' + id);
+      const arrow = document.getElementById('arrow-' + id);
+      if (!scroller || !arrow) return;
+      if (scroller.style.display === 'none') {
+        scroller.style.display = 'grid';
+        arrow.style.transform = 'rotate(180deg)';
+      } else {
+        scroller.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    // Carrito (sin envío)
+    function addToCartBase(item){
+      const key = item.id + (item.meta ? `|${item.meta}` : '');
+      if (!cart[key]) cart[key] = { ...item, qty: 0 };
+      cart[key].qty += 1; persist(); renderCart();
+    }
+    function setQty(key, qty){
+      if (!cart[key]) return;
+      cart[key].qty = Math.max(0, qty|0);
+      if (!cart[key].qty) delete cart[key];
+      persist(); renderCart();
+    }
+    function persist(){ localStorage.setItem('cart', JSON.stringify(cart)); }
+
+    const cartItemsEl = document.getElementById('cart-items');
+    const subtotalEl = document.getElementById('subtotal');
+    const totalEl = document.getElementById('total');
+
+    const calcSubtotal = () => Object.values(cart).reduce((s,i)=>s + i.price * i.qty, 0);
+
+    function renderCart(){
+      const items = Object.values(cart);
+      cartItemsEl.innerHTML = items.length === 0
+        ? `<div class="empty">Tu carrito está vacío. Agrega productos del menú.</div>`
+        : items.map(item => `
+      <div class="cart-item">
+        <img src="${item.image || 'media/no-image.jpg'}" alt="${item.name}" onerror="this.onerror=null;this.src='media/no-image.jpg';" />
+        <div>
+          <div><strong>${item.name}</strong></div>
+          ${item.meta ? `<div class="meta">${item.meta}</div>` : ''}
+          <div class="qty">
+            <button onclick="setQty('${item.id}${item.meta ? '|' + item.meta : ''}', ${item.qty - 1})">-</button>
+            <span>${item.qty}</span>
+            <button onclick="setQty('${item.id}${item.meta ? '|' + item.meta : ''}', ${item.qty + 1})">+</button>
+          </div>
+        </div>
+        <div class="price">${MXN.format(item.price * item.qty)}</div>
+      </div>
+    `).join('');
+
+  const subtotal = calcSubtotal();
+  subtotalEl.textContent = MXN.format(subtotal);
+  totalEl.textContent = MXN.format(subtotal); // Total = Subtotal (sin envío)
+
+  const count = items.reduce((s,i)=>s+i.qty,0);
+  document.getElementById('cart-count').textContent = `${count} ${count===1 ? 'artículo' : 'artículos'}`;
+    }
+
+    // Modal / opciones
+    const modalBackdrop = document.getElementById('modal-backdrop');
+    const modalContent = document.getElementById('modal-content');
+    const modalTitle = document.getElementById('modal-title');
+    const modalCancel = document.getElementById('modal-cancel');
+    const modalOk = document.getElementById('modal-ok');
+    let modalConfirmHandler = null;
+
+    function openModal(title, innerHTML, onConfirm){
+      modalTitle.textContent = title;
+      modalContent.innerHTML = innerHTML;
+      modalBackdrop.classList.add('show');
+      modalConfirmHandler = onConfirm;
+    }
+    function closeModal(){
+      modalBackdrop.classList.remove('show');
+      modalContent.innerHTML = '';
+      modalConfirmHandler = null;
+    }
+    modalCancel.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) closeModal(); });
+    modalOk.addEventListener('click', ()=>{ if (modalConfirmHandler) modalConfirmHandler(); });
+
+    function startAddFlow(id){
+      const p = PRODUCT_MAP[id]; if (!p) return;
+      // Buscar la sección real del producto
+      let section = '';
+      for (const s of CATALOG) if (s.items.some(prod => prod.id === id)) section = s.section;
+      if (!p.options) { addToCartBase({ id: p.id, name: p.name, price: p.price, image: p.image }); return; }
+      const opts = p.options; let html = '';
+
+      // Submenú solo para paquetes de pollo frito
+      const isPolloFritoPaquete = section === 'POLLO FRITO' && p.name.toLowerCase().includes('paquete');
+      if (isPolloFritoPaquete) {
+        html += `<div class="group"><label class="small">Acompañamiento:
+          <select id="acompanamiento-select">
+            <option value="Puré">Puré</option>
+            <option value="Espagueti">Espagueti</option>
+          </select>
+        </label></div>`;
+      }
+
+      // (El submenú ahora está integrado en el grupo de salsas)
+
+      if (opts.friesDelta) {
+        html += `<div class="group"><label class="choice"><input type="checkbox" id="opt-fries"/> Agregar porción de papas (+${MXN.format(opts.friesDelta)})</label></div>`;
+      }
+      let sauceList = null; if (opts.sauce === true) sauceList = SAUCES; else if (Array.isArray(opts.sauce)) sauceList = opts.sauce;
+      // Detectar si es alitas o boneless para agregar Naturales/Salsa aparte
+      const isAlitasOBoneless = section === 'ALITAS' || section === 'BONELESS';
+      if (sauceList) {
+        html += `<div class="group"><div class="muted" style="margin-bottom:6px">Elige salsa</div>
+          <div class="choices">
+            ${sauceList.map((s,i)=>`<label class="choice"><input type="radio" name="opt-sauce" value="${s}" ${i===0&&!isAlitasOBoneless?'checked':''}/> ${s}</label>`).join('')}
+            ${isAlitasOBoneless ? `<label class="choice"><input type="radio" name="opt-sauce" value="Naturales"/> Naturales</label><label class="choice"><input type="radio" name="opt-sauce" value="Salsa aparte" id="salsa-aparte-radio"/> Salsa aparte</label>` : ''}
+          </div>
+          ${isAlitasOBoneless ? `<div style="margin-top:6px;"><input type="text" id="salsa-aparte-input" placeholder="¿Cuál salsa aparte?" style="display:none;width:140px;font-size:0.95em;" maxlength="30"/></div>` : ''}
+        </div>`;
+      }
+      if (opts.sushi) {
+        const type = opts.sushi.type;
+        const fresh = SUSHI_FRESH;
+        const fried = SUSHI_FRIED;
+        // Select con optgroup para distinguir frescos y fritos y mostrar sección
+        const sel = (id, l, freshList, friedList) =>
+          `<label class="small">${l}<select id="${id}">
+            <optgroup label="Frescos (SUSHI)">
+              ${freshList.map(o => `<option value="${o.name}">${o.name} (Fresco)</option>`).join('')}
+            </optgroup>
+            <optgroup label="Fritos (SUSHI)">
+              ${friedList.map(o => `<option value="${o.name}">${o.name} (Frito)</option>`).join('')}
+            </optgroup>
+          </select></label>`;
+        if (type==='individual' || type==='combo3') html += `<div class="group"><div class="muted" style="margin-bottom:6px">Elige tu rollo (SUSHI)</div>${sel('s1','Rollo', fresh, fried)}</div>`;
+        if (type==='combo1') html += `<div class="group"><div class="muted" style="margin-bottom:6px">Elige 1 frito y 2 frescos (SUSHI)</div>${sel('sf1','Frito', [], fried)}${sel('sr1','Fresco 1', fresh, [])}${sel('sr2','Fresco 2', fresh, [])}</div>`;
+        if (type==='combo2') html += `<div class="group"><div class="muted" style="margin-bottom:6px">Elige 2 rollos (SUSHI)</div>${sel('s1','Rollo 1', fresh, fried)}${sel('s2','Rollo 2', fresh, fried)}</div>`;
+      }
+
+      openModal('Eleccion ' + p.name, html, () => {
+        let price = p.price; const metaParts = [];
+        let sauce = document.querySelector('input[name="opt-sauce"]:checked');
+        // Guardar acompañamiento si es paquete de pollo frito
+        if (isPolloFritoPaquete) {
+          const acomp = document.getElementById('acompanamiento-select');
+          if (acomp) metaParts.push('Acompañamiento: ' + acomp.value);
+        }
+        // Guardar salsa seleccionada SOLO una vez
+        if (sauce) {
+          if (isAlitasOBoneless) {
+            const salsaAparteInput = document.getElementById('salsa-aparte-input');
+            if (sauce.value === 'Naturales') {
+              metaParts.push('Naturales');
+            } else if (sauce.value === 'Salsa aparte') {
+              const salsaTxt = salsaAparteInput && salsaAparteInput.value.trim() ? ` (${salsaAparteInput.value.trim()})` : '';
+              metaParts.push('Salsa aparte' + salsaTxt);
+            } else {
+              metaParts.push('Salsa: ' + sauce.value);
+            }
+          } else {
+            metaParts.push('Salsa: ' + sauce.value);
+          }
+        }
+      // Mostrar/ocultar input de salsa aparte según selección
+      setTimeout(()=>{
+        const salsaAparteRadio = document.getElementById('salsa-aparte-radio');
+        const salsaAparteInput = document.getElementById('salsa-aparte-input');
+        if (salsaAparteRadio && salsaAparteInput) {
+          const updateInput = () => {
+            salsaAparteInput.style.display = salsaAparteRadio.checked ? 'inline-block' : 'none';
+            if (!salsaAparteRadio.checked) salsaAparteInput.value = '';
+          };
+          document.querySelectorAll('input[name="opt-sauce"]').forEach(radio => {
+            radio.addEventListener('change', updateInput);
+          });
+          updateInput();
+        }
+      }, 0);
+        const cb = document.getElementById('opt-fries'); if (cb && cb.checked) { price += opts.friesDelta; metaParts.push('Con papas'); }
+        if (opts.sushi) {
+          const type = opts.sushi.type;
+          // Guardar el texto del <option> seleccionado, que ya incluye (Fresco) o (Frito)
+          if (type==='individual' || type==='combo3') {
+            const s1 = document.getElementById('s1');
+            metaParts.push('Rollo: ' + s1.options[s1.selectedIndex].text);
+          }
+          if (type==='combo1') {
+            const sf1 = document.getElementById('sf1');
+            const sr1 = document.getElementById('sr1');
+            const sr2 = document.getElementById('sr2');
+            metaParts.push(`Frito: ${sf1.options[sf1.selectedIndex].text}`);
+            metaParts.push(`Frescos: ${sr1.options[sr1.selectedIndex].text}, ${sr2.options[sr2.selectedIndex].text}`);
+          }
+          if (type==='combo2') {
+            const s1 = document.getElementById('s1');
+            const s2 = document.getElementById('s2');
+            metaParts.push(`Rollos: ${s1.options[s1.selectedIndex].text},${s2.options[s2.selectedIndex].text}`);
+          }
+        }
+        addToCartBase({ id: p.id, name: p.name, price, image: p.image, meta: metaParts.join(' · ') }); closeModal();
+      });
+    }
+
+    // WhatsApp (sin envío)
+    function buildWhatsAppMessage(){
+      const items = Object.values(cart); if (!items.length) return '';
+      const name = (document.getElementById('customer-name').value || '').trim();
+      const phone = (document.getElementById('customer-phone').value || '').trim();
+      const address = (document.getElementById('customer-address').value || '').trim();
+      const paymentType = (document.getElementById('payment-type')?.value || '').trim();
+      const notes = (document.getElementById('order-notes').value || '').trim();
+
+      const lines = [];
+      lines.push('🧾 *Nuevo pedido*');
+      if (name) lines.push(`👤 Cliente: ${name}`);
+      if (phone) lines.push(`📞 Tel: ${phone}`);
+      if (address) lines.push(`📍 Dirección: ${address}`);
+      if (paymentType) lines.push(`💳 Tipo de pago: ${paymentType}`);
+      lines.push('');
+      lines.push('*Productos:*');
+      // Mapa de sección a emoji
+      const SECTION_EMOJIS = {
+        'MARISCOS': '🦐',
+        'BONELESS': '🍗',
+        'ALITAS': '🍗',
+        'HOT DOGS JUMBO': '🌭',
+        'HAMBURGUESAS': '🍔',
+        'SUSHI': '🍣',
+        'POLLO FRITO': '🍗'
+      };
+      // Mapa de producto a sección
+      const PRODUCT_SECTION = {};
+      for (const s of CATALOG) for (const p of s.items) PRODUCT_SECTION[p.id] = s.section;
+      for (const it of items) {
+        const section = PRODUCT_SECTION[it.id] || '';
+        const emoji = SECTION_EMOJIS[section] || '•';
+        // Mostrar nombre real del producto, meta y tipo de sushi si aplica
+        let tipoRollo = '';
+        if (section === 'SUSHI') {
+          if (SUSHI_FRESH.some(r => it.name.includes(r.name))) tipoRollo = ' (Fresco)';
+          else if (SUSHI_FRIED.some(r => it.name.includes(r.name))) tipoRollo = ' (Frito)';
+        }
+        // Meta en líneas separadas y con sangría
+        let meta = '';
+        if (it.meta) {
+          meta = it.meta.split(' · ').map(m=>`\n    - ${m}`).join('');
+        }
+        lines.push(`*${emoji} ${it.qty} x ${it.name}*${tipoRollo}${meta}\n    _${MXN.format(it.price * it.qty)}_`);
+      }
+      const subtotal = calcSubtotal();
+  lines.push('');
+  lines.push(`*🧾 Total: ${MXN.format(subtotal)}*`);
+      if (notes) { lines.push(''); lines.push(`📝 Notas: ${notes}`); }
+      lines.push('');
+      lines.push('Por favor confirmar tiempo de entrega. ¡Gracias!');
+      return lines.join('\n');
+    }
+
+
+    document.getElementById('send-whatsapp').addEventListener('click', () => {
+      const items = Object.values(cart);
+      if (!items.length) { alert('Tu carrito está vacío.'); return; }
+      if (!/^[0-9]{11,15}$/.test(WHATSAPP_NUMBER)) {
+        alert('Configura un número de WhatsApp válido en WHATSAPP_NUMBER.');
+        return;
+      }
+      // Preparar datos para Google Sheets
+      const name = (document.getElementById('customer-name').value || '').trim();
+      const phone = (document.getElementById('customer-phone').value || '').trim();
+      const address = (document.getElementById('customer-address').value || '').trim();
+      const paymentType = (document.getElementById('payment-type')?.value || '').trim();
+      const total = MXN.format(calcSubtotal());
+      const productos = items.map(it => `${it.qty} x ${it.name}${it.meta ? ' [' + it.meta + ']' : ''}`).join(' | ');
+      enviarPedidoASheet({
+        telefono: phone,
+        pedido: productos,
+        direccion: address,
+        total: typeof calcSubtotal === 'function' ? calcSubtotal() : total,
+        metodo_pago: paymentType
+      });
+      // WhatsApp
+      const msg = buildWhatsAppMessage();
+      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+      showThankYouModal();
+    });
+
+    // Modal de agradecimiento
+    function showThankYouModal() {
+      // Si ya existe, no lo agregues de nuevo
+      if (document.getElementById('thankyou-modal')) return;
+      // Construir resumen del pedido
+      const items = Object.values(cart);
+      let resumen = '';
+      if (items.length) {
+        resumen = `<div class='thankyou-resumen'>
+          <b style="font-size:1.08em;">Productos:</b><br>
+          <ul style="padding-left:18px;">
+          ` + items.map(it => {
+            // Emoji por sección
+            const section = (()=>{for(const s of CATALOG)if(s.items.some(p=>p.id===it.id))return s.section;return ''})()
+            const emoji = {
+              'MARISCOS':'🦐','BONELESS':'🍗','ALITAS':'🍗','HOT DOGS JUMBO':'🌭','HAMBURGUESAS':'🍔','SUSHI':'🍣','POLLO FRITO':'🍗'
+            }[section]||'•';
+            // Meta en líneas separadas
+            let meta = '';
+            if(it.meta){
+              meta = it.meta.split(' · ').map(m=>`<div style='color:#ff6a3d;font-size:0.97em;margin-left:0.5em;'>${m}</div>`).join('');
+            }
+            return `<li style="margin-bottom:7px;"><span style="font-size:1.1em;">${emoji}</span> <b>${it.qty} x ${it.name}</b>${meta} <span style="color:#aaa;">${MXN.format(it.price * it.qty)}</span></li>`;
+          }).join('') +
+          `</ul><div style='margin-top:10px;font-size:1.18em;'><b style='color:#ff2d2d;'>Total: ${MXN.format(calcSubtotal())}</b></div></div>`;
+      }
+      const modal = document.createElement('div');
+      modal.id = 'thankyou-modal';
+      modal.innerHTML = `
+        <div class="thankyou-box">
+          <img src="media/logo/logo.jpg" alt="Logo" class="thankyou-logo">
+          <h2 class="thankyou-title">¡Gracias por tu preferencia!</h2>
+          <p class="thankyou-msg">Tu pedido ha sido recibido y será atendido muy pronto.<br>¡Buen provecho!</p>
+          ${resumen}
+          <button id="btn-volver-pedir" class="thankyou-btn">Volver a pedir</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      document.getElementById('btn-volver-pedir').onclick = function() {
+        // Limpiar carrito y formulario
+        for (const k of Object.keys(cart)) delete cart[k];
+        persist();
+        renderCart();
+        // Limpiar campos del formulario
+        document.getElementById('customer-name').value = '';
+        document.getElementById('customer-phone').value = '';
+        document.getElementById('customer-address').value = '';
+        document.getElementById('order-notes').value = '';
+        document.getElementById('payment-type').selectedIndex = 0;
+        document.getElementById('thankyou-modal').remove();
+        window.scrollTo({top:0, behavior:'smooth'});
+      };
+    }
+
+    document.getElementById('clear-cart').addEventListener('click', () => {
+      if (!confirm('¿Vaciar carrito?')) return;
+      for (const k of Object.keys(cart)) delete cart[k];
+      persist();
+      renderCart();
+    });
+
+    // Inicializar
+    renderProducts();
+    renderCart();
+  function enviarPedidoASheet(datos) {
+    fetch('http://localhost:3000/guardar-pedido', {
+      method: 'POST',
+      body: JSON.stringify(datos),
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  </script>
+<script src="cart.js"></script>
+</body>
+
